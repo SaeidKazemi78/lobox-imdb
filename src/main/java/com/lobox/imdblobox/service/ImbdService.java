@@ -6,52 +6,30 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class ImbdService {
 
+    private static final ExecutorService executorService = Executors.newFixedThreadPool(2);
 
 
+    public static void main(String[] args) throws IOException {
 
 
-    public static void readData(){
-
-
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                List<CrewDto> crewDtoList = readCrewListFromFile();
-
-            }
-        }) ;
-        Thread thread2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                List<CrewDto> crewDtoList = readCrewListFromFile();
-
-            }
-        }) ;
-        Thread thread3 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                List<CrewDto> crewDtoList = readCrewListFromFile();
-
-            }
-        }) ;
-        thread.start();
-        thread2.start();
-        thread3.start();
-
+        List<CrewDto> crewDtoList = readCrewListFromFile();
 
     }
 
-
-    public static List<CrewDto> readCrewListFromFile() {
+    /**
+     This code does not bring the whole file in memory at once.
+     */
+    public static List<CrewDto> readCrewListFromFile() throws IOException {
         InputStream inputStream = ImbdService.class.getResourceAsStream("/dataset/data.tsv");
         List<CrewDto> crewDtoList = new ArrayList<>();
-        try {
             assert inputStream != null;
             try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-                crewDtoList = br.lines().limit(00).map(mapValue -> {
+                crewDtoList = br.lines().limit(60000).map(mapValue -> {
                     String[] fields = mapValue.split("\t");
                     String tConst = fields[0];
                     String director = fields[1];
@@ -63,18 +41,9 @@ public class ImbdService {
                     return crewDto;
                 }).toList();
             }
-        } catch (IOException e) {
-            //Handle exception
-            e.printStackTrace();
-        }
-
         return crewDtoList;
     }
 
-    public static void main(String[] args) {
 
-        readCrewListFromFile();
-
-    }
 
 }
