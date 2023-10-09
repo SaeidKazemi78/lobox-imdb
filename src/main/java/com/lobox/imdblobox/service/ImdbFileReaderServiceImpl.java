@@ -1,23 +1,28 @@
 package com.lobox.imdblobox.service;
 
+
 import com.lobox.imdblobox.controller.dto.BasicDto;
 import com.lobox.imdblobox.controller.dto.CrewDto;
 import com.lobox.imdblobox.controller.dto.NameBasicDto;
 import com.lobox.imdblobox.controller.dto.PrincipalDto;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
 public class ImdbFileReaderServiceImpl implements ImdbFileReaderService {
-    private static final long LIMIT = 2000000;
+    //    private static final long LIMIT = 2000000;
+    private static final long LIMIT = 50000;
     private static final short HEADER_INDEX = 1;
 
     @Override
@@ -39,6 +44,7 @@ public class ImdbFileReaderServiceImpl implements ImdbFileReaderService {
         }
         return crewDtoList;
     }
+
 
     @Override
     public Set<CrewDto> readAllCrewListWithSameDirectorAndWriter() throws IOException {
