@@ -3,12 +3,13 @@ package com.lobox.imdblobox.service;
 import com.lobox.imdblobox.controller.dto.BasicDto;
 import com.lobox.imdblobox.controller.dto.CrewDto;
 import com.lobox.imdblobox.controller.dto.NameBasicDto;
-import org.springframework.data.util.Pair;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -16,7 +17,7 @@ public class ImbdService {
 
     private static final ExecutorService executorService = Executors.newFixedThreadPool(4);
 
-    private static final ImdbFileReaderServiceImpl imdbFileReaderService = new ImdbFileReaderServiceImpl();
+    private static final ImdbFileReaderServiceChanelImpl imdbFileReaderService = new ImdbFileReaderServiceChanelImpl();
 
     /*
         public ImbdService(ImdbFileReaderService imdbFileReaderService) {
@@ -27,9 +28,10 @@ public class ImbdService {
 
     public static void main(String[] args) throws IOException, InterruptedException, ExecutionException {
         long start = System.currentTimeMillis();
-        Set<String> listData2 = readAliveSameDirectorAndWriterTitles2();
-        Set<String> listData3 = readAliveSameDirectorAndWriterTitlesSingleThread();
+//        Set<String> listData2 = readAliveSameDirectorAndWriterTitles2();
+//        Set<String> listData3 = readAliveSameDirectorAndWriterTitlesSingleThread();
 
+        List<String> listData4 = readTitlesThatActorsPlayedAt("nm0000004", "nm0000006");
         long end = System.currentTimeMillis();
         //43 second last seconds
         //30 second to execute overall process
@@ -37,23 +39,10 @@ public class ImbdService {
     }
 
 
+    public static Set<String> readAliveSameDirectorAndWriterTitlesWithJavaChannel() throws IOException, InterruptedException, ExecutionException {
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return null;
+    }
 
 
     public static Set<String> readAliveSameDirectorAndWriterTitles2() throws IOException, InterruptedException, ExecutionException {
@@ -85,7 +74,7 @@ public class ImbdService {
 
             Set<String> aliveNameBasicList = null;
             try {
-                aliveNameBasicList = imdbFileReaderService.readAliveNameBasicListFromFile().stream().map(NameBasicDto::getNConst).collect(Collectors.toSet());
+                aliveNameBasicList = imdbFileReaderService.readNameBasicListFromFile(true).stream().map(NameBasicDto::getNConst).collect(Collectors.toSet());
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -126,7 +115,7 @@ public class ImbdService {
         Set<String> directorIds = crewDtoList.stream()
                 .map(CrewDto::getDirector)
                 .collect(Collectors.toSet());
-        Set<String> aliveNameBasicList = imdbFileReaderService.readAliveNameBasicListFromFile().stream().map(NameBasicDto::getNConst).collect(Collectors.toSet());
+        Set<String> aliveNameBasicList = imdbFileReaderService.readNameBasicListFromFile(true).stream().map(NameBasicDto::getNConst).collect(Collectors.toSet());
         for (String nConst : aliveNameBasicList) {
             if (directorIds.contains(nConst)) {
                 titleIds.addAll(crewDtoList.stream()
@@ -144,40 +133,10 @@ public class ImbdService {
                 .collect(Collectors.toSet());
     }
 
-
-
-
-
-
-
-
-
-
-/*    File file = new File("/home/saeidkazemi/title.crew.tsv");
-        try (
-    FileInputStream fis = new FileInputStream(file); BufferedInputStream inputStream = new BufferedInputStream(fis)) {
-        Set<CrewDto> crewDtoList;
-        //This code snippet does not bring the whole file in memory at once.
-        //Using try-with-resources to close BufferedReader automatically
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
-
-            crewDtoList = br.lines().skip(HEADER_INDEX).limit(LIMIT).map(mapValue -> {
-                return mapValue.split("\t");
-            }).filter(fields -> !fields[1].equals("\\N") && fields[1].equals(fields[2])).map(mapValue -> {
-                CrewDto crewDto = new CrewDto();
-                crewDto.setTConst(mapValue[0]);
-                crewDto.setDirector(mapValue[1]);
-                crewDto.setWriter(mapValue[2].replace("\\N", ""));
-                return crewDto;
-            }).collect(Collectors.toSet());
-        }
-        return crewDtoList;
-    }*/
-
     public static Set<String> readAliveSameDirectorAndWriterTitles() throws IOException, InterruptedException, ExecutionException {
         Set<String> titleIds = new HashSet<>();
         Set<CrewDto> crewDtoLis = imdbFileReaderService.readAllCrewListWithSameDirectorAndWriter();
-        imdbFileReaderService.readAliveNameBasicListFromFile().stream().
+        imdbFileReaderService.readNameBasicListFromFile(false).stream().
                 filter(filterValue -> crewDtoLis.stream()
                         .peek(mapValue -> {
                             if (mapValue.getDirector().equals(filterValue.getNConst())) {
@@ -191,7 +150,24 @@ public class ImbdService {
         return imdbFileReaderService.readBasicListFromFile().stream().filter(value -> titleIds.stream().anyMatch(matchValue -> matchValue.equals(value.getTconst())))
                 .map(BasicDto::getPrimaryTitle).collect(Collectors.toSet());
 
+    }
 
+    /**
+     * Question Number 3
+     */
+    public static Set<String> questionNumber3() throws IOException {
+        Set<BasicDto> specifiedGenres = imdbFileReaderService.readBasicListFromFile();
+
+        int sum = specifiedGenres.stream()
+                .mapToInt(ss->Integer.parseInt(ss.getStartYear()))
+                .sum();
+
+        Map<String, String> peopleByAge = specifiedGenres.stream()
+                .collect(Collectors.toMap(BasicDto::getStartYear, obj -> {
+                    obj.getTconst();
+                }));
+
+    }
 /*      BlockingQueue<List<CrewDto>> crewDtoListQueue = new LinkedBlockingQueue<>();
 
         executorService.submit(() -> {
@@ -247,7 +223,46 @@ public class ImbdService {
 */
 
 
+
+
+
+
+
+
+
+/*    File file = new File("/home/saeidkazemi/title.crew.tsv");
+        try (
+    FileInputStream fis = new FileInputStream(file); BufferedInputStream inputStream = new BufferedInputStream(fis)) {
+        Set<CrewDto> crewDtoList;
+        //This code snippet does not bring the whole file in memory at once.
+        //Using try-with-resources to close BufferedReader automatically
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8))) {
+
+            crewDtoList = br.lines().skip(HEADER_INDEX).limit(LIMIT).map(mapValue -> {
+                return mapValue.split("\t");
+            }).filter(fields -> !fields[1].equals("\\N") && fields[1].equals(fields[2])).map(mapValue -> {
+                CrewDto crewDto = new CrewDto();
+                crewDto.setTConst(mapValue[0]);
+                crewDto.setDirector(mapValue[1]);
+                crewDto.setWriter(mapValue[2].replace("\\N", ""));
+                return crewDto;
+            }).collect(Collectors.toSet());
+        }
+        return crewDtoList;
+    }*/
+
+    public static List<String> readTitlesThatActorsPlayedAt(String firstActorId, String secondActorId) throws IOException {
+        Set<String> titleIds = new HashSet<>();
+        String firstActorTitleString = imdbFileReaderService.readActorInfo(firstActorId).getKnownForTitles();
+        Set<String> firstActorTitleIds = new HashSet<>(Arrays.asList(firstActorTitleString.split(",")));
+        String secondActorTitleString = imdbFileReaderService.readActorInfo(secondActorId).getKnownForTitles();
+        Set<String> secondActorTitleIds = new HashSet<>(Arrays.asList(secondActorTitleString.split(",")));
+        titleIds = firstActorTitleIds.stream().filter(secondActorTitleIds::contains).collect(Collectors.toSet());
+        if (titleIds.isEmpty()) {
+            return Collections.emptyList();
+        } else {
+            return imdbFileReaderService.readBasicListFromFileBasedOnList(titleIds)
+                    .stream().map(BasicDto::getPrimaryTitle).toList();
+        }
     }
-
-
 }

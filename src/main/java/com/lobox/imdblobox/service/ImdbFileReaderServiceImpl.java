@@ -6,13 +6,13 @@ import com.lobox.imdblobox.controller.dto.CrewDto;
 import com.lobox.imdblobox.controller.dto.NameBasicDto;
 import com.lobox.imdblobox.controller.dto.PrincipalDto;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.util.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -119,8 +119,8 @@ public class ImdbFileReaderServiceImpl implements ImdbFileReaderService {
         return principalDto;
     }
 
-    @Override
-    public Set<NameBasicDto> readNameBasicListFromFile() throws IOException {
+/*    @Override
+    public Set<NameBasicDto> readNameBasicListFromFile(boolean justForAliveOnes) throws IOException {
         BufferedInputStream inputStream = (BufferedInputStream) ImbdService.class.getResourceAsStream("/home/saeidkazemi/name.basics.tsv");
         Set<NameBasicDto> nameBasicDtoList;
         assert inputStream != null;
@@ -140,10 +140,10 @@ public class ImdbFileReaderServiceImpl implements ImdbFileReaderService {
             }).collect(Collectors.toSet());
         }
         return nameBasicDtoList;
-    }
+    }*/
 
     @Override
-    public Set<NameBasicDto> readAliveNameBasicListFromFile() throws IOException {
+    public Set<NameBasicDto> readNameBasicListFromFile(boolean justForAliveOnes) throws IOException {
         File file = new File("/home/saeidkazemi/name.basics.tsv");
         try (FileInputStream fis = new FileInputStream(file); BufferedInputStream inputStream = new BufferedInputStream(fis)) {
             Set<NameBasicDto> nameBasicDtoList = null;
@@ -169,5 +169,10 @@ public class ImdbFileReaderServiceImpl implements ImdbFileReaderService {
                 return nameBasicDtoList;
             }
         }
+    }
+
+    @Override
+    public NameBasicDto readActorInfo(String actorId) throws IOException {
+        return null;
     }
 }
