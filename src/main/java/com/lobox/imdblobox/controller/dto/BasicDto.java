@@ -1,12 +1,13 @@
 package com.lobox.imdblobox.controller.dto;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
 @Data
+@NoArgsConstructor
 public class BasicDto implements Serializable {
-//tconst	titleType	primaryTitle	originalTitle	isAdult	startYear	endYear	runtimeMinutes	genres
     private String tconst;
     private String titleType;
     private String primaryTitle;
@@ -16,5 +17,4 @@ public class BasicDto implements Serializable {
     private String endYear;
     private String runtimeMinutes;
     private String genres;
-
 }
